@@ -1,0 +1,70 @@
+const colors = ['black', 'white'] as const;
+
+class Case {
+    x: number;
+    y: number;
+    color: 'black' | 'white';
+
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+        this.color = colors[(x + y) %2];
+    }
+}
+
+class Grid {
+    cases: Case[][];
+
+    constructor(public width: number, public height: number) {
+        this.cases = [];
+        for(let x = 0 ; x < width ; x++) {
+            this.cases[x] = [];
+            for(let y = 0 ; y < height ; y++) {
+                this.cases[x][y] = new Case(x, y);
+            }
+        }
+
+        // notation map (équivalent)
+        // map est très efficace pour transformer des tableau (cf LineComponent par exemple)
+        // pour en créer c'est moins pratique, il faut bricoler avec new Array et fill
+        // this.cases = new Array(width).fill(new Array(height).fill(0))
+        //     .map((line, x) => line.map((_: number, y: number) => new Case(x, y)));
+    }
+}
+
+function voisins(cell: Case, grid: Grid) {
+    return [-1, 0, 1].flatMap(dx => [-1, 0, 1].map(dy => ([cell.x + dx, cell.y + dy])))
+        .filter(([x, y]) => x >= 0 && y >= 0 && x < grid.width && y < grid.height)
+        .map(([x, y]) => grid.cases[x][y])
+        .filter(c => c !== cell);
+}
+
+const grid = new Grid(3, 3);
+console.log(grid.cases[1][2].color);
+
+console.log(JSON.stringify(grid));
+
+console.log(JSON.stringify(voisins(grid.cases[0][1], grid)));
+
+
+
+
+function CaseComponent({cell}: {cell: Case}) {
+    return <td style="background-color:{cell.color}"></td>
+}
+
+function LineComponent({line}: {line: Case[]}) {
+    return (
+        <tr>
+            { line.map(cell => <CaseComponent cell={cell}></CaseComponent>) }
+        </tr>
+    );
+}
+
+function GridComponent({grid}: {grid: Grid}) {
+    return (
+        <table>
+            { grid.cases.map(line => <LineComponent line={line}></LineComponent>) }
+        </table>
+    );
+}
